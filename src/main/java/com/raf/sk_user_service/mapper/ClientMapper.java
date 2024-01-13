@@ -24,7 +24,6 @@ public class ClientMapper{
         client.setPassword(clientCreateDto.getPassword());
         client.setUsername(clientCreateDto.getUsername());
         client.setRole(clientCreateDto.getRole());
-        System.out.println(client);
         return client;
     }
 }

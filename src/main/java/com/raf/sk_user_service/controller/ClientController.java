@@ -1,14 +1,10 @@
 package com.raf.sk_user_service.controller;
 
-import java.util.Base64;
-
-import com.raf.sk_user_service.domain.Client;
 import com.raf.sk_user_service.dto.*;
 import com.raf.sk_user_service.listener.helper.MessageHelper;
 import com.raf.sk_user_service.security.service.TokenService;
 import com.raf.sk_user_service.service.ClientService;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -22,7 +18,6 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/client")//ovde definisemo putanju na koju se zahtev salje
