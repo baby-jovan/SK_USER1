@@ -16,4 +16,7 @@ public class NotificationDto {
         this.body = body;
         this.notificationType = notificationType;
     }
+
+    public NotificationDto() {
+    }
 }
