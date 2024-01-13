@@ -11,6 +11,7 @@ import java.util.Date;
 public class ClientDto {
     private Long id;
     private String email, username, name, lastName;
+
     private String dateOfBirth;
     private Role role;
 }

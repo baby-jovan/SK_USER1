@@ -73,7 +73,6 @@ public class ClientServiceImpl implements ClientService {
         client.setLastName(clientUpdatedDto.getLastName());
         client.setDateOfBirth(clientUpdatedDto.getDateOfBirth());
         client.setUsername(clientUpdatedDto.getUsername());
-        client.setPassword(clientUpdatedDto.getPassword());
 
         return clientMapper.clientToClientDto(clientRepository.save(client));
     }
@@ -81,5 +80,16 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public void deleteById(Long id) {
         clientRepository.deleteById(id);
+    }
+
+    @Override
+    public ClientDto updatePassword(Long id, ClientUpdatePasswordDto clientUpdatePasswordDto) {
+        Client client = clientRepository.findById(id).orElseThrow(() ->
+                new NotFoundException("Client with id: " + id + " not found.")
+        );
+
+        client.setPassword(clientUpdatePasswordDto.getPassword());
+
+        return clientMapper.clientToClientDto(clientRepository.save(client));
     }
 }

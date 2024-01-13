@@ -15,4 +15,6 @@ public interface ClientService {
 
     ClientDto update(Long id, ClientUpdatedDto clientUpdatedDto);
     void deleteById(Long id);
+
+    ClientDto updatePassword(Long id, ClientUpdatePasswordDto clientUpdatePasswordDto);
 }

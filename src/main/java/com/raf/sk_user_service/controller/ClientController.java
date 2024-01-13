@@ -1,7 +1,10 @@
 package com.raf.sk_user_service.controller;
 
 import java.util.Base64;
+
+import com.raf.sk_user_service.domain.Client;
 import com.raf.sk_user_service.dto.*;
+import com.raf.sk_user_service.listener.helper.MessageHelper;
 import com.raf.sk_user_service.security.service.TokenService;
 import com.raf.sk_user_service.service.ClientService;
 import io.jsonwebtoken.Claims;
@@ -15,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
@@ -26,6 +30,9 @@ import java.util.Optional;
 public class ClientController {
     private ClientService clientService;
     private TokenService tokenService;
+    private JmsTemplate jmsTemplate;
+    private MessageHelper messageHelper;
+    private String orderDestination;
 
     @Value("${oauth.jwt.secret}")
     private String secretKey;
@@ -33,9 +40,13 @@ public class ClientController {
     ///ovde ide jos svasta nesto
 
 
-    public ClientController(ClientService clientService, TokenService tokenService){
+    public ClientController(ClientService clientService, TokenService tokenService, JmsTemplate jmsTemplate,
+                            MessageHelper messageHelper, @Value("${destination.notify}") String orderDestination){
         this.clientService = clientService;
         this.tokenService = tokenService;
+        this.jmsTemplate = jmsTemplate;
+        this.messageHelper = messageHelper;
+        this.orderDestination = orderDestination;
     }
 
     @ApiOperation(value = "Get all clients")
@@ -63,6 +74,8 @@ public class ClientController {
 
     @PostMapping("/register")
     public ResponseEntity<ClientDto> add(@RequestBody ClientCreateDto clientCreateDto){
+        jmsTemplate.convertAndSend(orderDestination,
+                messageHelper.createTextMessage(new NotifyDto("Uspesno ste se registrovali", "Potvrda registracije", clientCreateDto.getEmail())));
         return new ResponseEntity<>(clientService.add(clientCreateDto), HttpStatus.CREATED);
     }
 
@@ -74,11 +87,17 @@ public class ClientController {
 
     @PutMapping("/update")
     public ResponseEntity<ClientDto> update(@RequestHeader(name = "Authorization") String token, @RequestBody ClientUpdatedDto clientUpdatedDto) {
-        System.out.println(token);
-        Claims claims = tokenService.parseToken(token);
-        Long userId = Long.parseLong(claims.getSubject());
-        System.out.println("AAAAAAAAA" + userId);
+        Claims claims = tokenService.parseToken(token.split(" ")[1]);
+        Long userId = Long.parseLong(claims.get("id").toString());
         return new ResponseEntity<>(clientService.update(userId, clientUpdatedDto), HttpStatus.OK);
     }
+
+    @PutMapping("/change_password")
+    public ResponseEntity<ClientDto> updatePassword(@RequestHeader(name = "Authorization") String token, @RequestBody ClientUpdatePasswordDto clientUpdatePasswordDto) {
+        Claims claims = tokenService.parseToken(token.split(" ")[1]);
+        Long userId = Long.parseLong(claims.get("id").toString());
+        return new ResponseEntity<>(clientService.updatePassword(userId, clientUpdatePasswordDto), HttpStatus.OK);
+    }
+
 
 }

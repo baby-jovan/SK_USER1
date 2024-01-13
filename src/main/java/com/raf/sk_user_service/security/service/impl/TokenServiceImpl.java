@@ -4,11 +4,11 @@ import com.raf.sk_user_service.security.service.TokenService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.Base64;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.Key;
 
 @Service
 public class TokenServiceImpl implements TokenService {
@@ -16,31 +16,30 @@ public class TokenServiceImpl implements TokenService {
     @Value("${oauth.jwt.secret}")
     private String base64Secret;
 
+
+
     @Override
     public String generate(Claims claims) {
-        byte[] decodedKey = Base64.getDecoder().decode(base64Secret); // dekodira secret
-        return Jwts.builder()
-                .setClaims(claims)
-                .signWith(Keys.hmacShaKeyFor(decodedKey), SignatureAlgorithm.HS512) // HS512 je algoritam za enkripciju, Keys.hmacShaKeyFor(decodedKey) je kljuc za enkripciju
+        Key secretKey = new SecretKeySpec(base64Secret.getBytes(), SignatureAlgorithm.HS512.getJcaName());
+
+        return Jwts.builder()  // Postavite podatke koji vam trebaju
+                .setClaims(claims)// Postavite vaš objekat kao claim
+                .signWith(secretKey)  // Postavite svoj tajni ključ za potpisivanje
                 .compact();
     }
 
     @Override
     public Claims parseToken(String jwt) {
+        Key secretKey = new SecretKeySpec(base64Secret.getBytes(), SignatureAlgorithm.HS512.getJcaName());
         try {
-            byte[] decodedKey = Base64.getDecoder().decode(base64Secret);
-
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(Keys.hmacShaKeyFor(decodedKey)) // Ključ za verifikaciju
+            return Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
                     .build()
                     .parseClaimsJws(jwt)
                     .getBody();
-
-
-            return claims;
         } catch (Exception e) {
-            // Logujte ili obradite izuzetak kako smatrate da je potrebno
             return null;
         }
     }
+
 }
