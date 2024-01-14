@@ -1,12 +1,12 @@
 package com.raf.sk_user_service.service;
 
 import com.raf.sk_user_service.dto.*;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 
 public interface ClientService {
-    Page<ClientDto> findAll(Pageable pageable);
+    List<ClientDto> findAll();
     TokenResponseDto logIn(TokenRequestDto tokenRequestDto);
     ClientDto findById(Long id);
     ClientDto add(ClientCreateDto clientCreateDto);
@@ -15,4 +15,6 @@ public interface ClientService {
     void deleteById(Long id);
 
     ClientDto updatePassword(Long id, ClientUpdatePasswordDto clientUpdatePasswordDto);
+
+    ClientDto setZabrana (zabranaDto zabranaDto);
 }

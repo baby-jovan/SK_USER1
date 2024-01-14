@@ -10,4 +10,5 @@ public class ClientCreateDto {
     private String email, username;
     private String password;
     private Role role;
+    private Long isZabrana;
 }

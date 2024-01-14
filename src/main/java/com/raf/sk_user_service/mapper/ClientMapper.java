@@ -12,6 +12,8 @@ public class ClientMapper{
         clientDto.setId(client.getId());
         clientDto.setName(client.getName());
         clientDto.setEmail(client.getEmail());
+        clientDto.setIsZabrana(client.getIsZabrana());
+        clientDto.setRole(client.getRole());
         clientDto.setUsername(client.getUsername());
         clientDto.setLastName(client.getLastName());
         clientDto.setDateOfBirth(client.getDateOfBirth());
@@ -24,6 +26,7 @@ public class ClientMapper{
         client.setPassword(clientCreateDto.getPassword());
         client.setUsername(clientCreateDto.getUsername());
         client.setRole(clientCreateDto.getRole());
+        client.setIsZabrana(Long.valueOf(1));
         return client;
     }
 }

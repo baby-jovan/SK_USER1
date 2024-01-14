@@ -8,6 +8,7 @@ import com.raf.sk_user_service.listener.helper.MessageHelper;
 import com.raf.sk_user_service.repository.ClientRepository;
 import com.raf.sk_user_service.repository.NotificationRepository;
 import com.raf.sk_user_service.repository.NotificationTypeRepository;
+import com.raf.sk_user_service.security.CheckSecurity;
 import com.raf.sk_user_service.security.service.TokenService;
 import com.raf.sk_user_service.service.ClientService;
 import io.jsonwebtoken.Claims;
@@ -16,13 +17,12 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.annotations.ApiIgnore;
+
+import java.util.List;
 
 
 @RestController
@@ -63,9 +63,11 @@ public class ClientController {
             @ApiImplicitParam(name = "sort", allowMultiple = true, value = "BLABLABLA NESTO ZA SORTING IDK", dataType = "string", paramType = "query")
     })
 
+    @CheckSecurity(roles = {"ROLE_ADMIN"})
     @GetMapping
-    public ResponseEntity<Page<ClientDto>> findAll(@ApiIgnore Pageable pageable){
-        return new ResponseEntity<>(clientService.findAll(pageable), HttpStatus.OK);
+    public ResponseEntity<List<ClientDto>> findAll(@RequestHeader("Authorization") String authorization){
+        List<ClientDto> clientList = clientService.findAll();
+        return new ResponseEntity<>(clientList, HttpStatus.OK);
     }
 
     @ApiOperation(value = "Login")
@@ -126,5 +128,10 @@ public class ClientController {
         return null;
     }
 
+    @PutMapping("/update-zabrana")
+    @CheckSecurity(roles = "ROLE_ADMIN")
+    public ResponseEntity<ClientDto> updateZabrana(@RequestHeader("Authorization") String authorization , @RequestBody zabranaDto zabranaDto) {
+        return new ResponseEntity<>(clientService.setZabrana(zabranaDto), HttpStatus.OK);
+    }
 
 }

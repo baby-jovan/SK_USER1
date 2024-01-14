@@ -11,11 +11,10 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import jakarta.transaction.Transactional;
 import lombok.SneakyThrows;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -31,8 +30,10 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public Page<ClientDto> findAll(Pageable pageable) {
-        return clientRepository.findAll(pageable).map(clientMapper::clientToClientDto);
+    public List<ClientDto> findAll() {
+        return clientRepository.findAll().stream()
+                .map(clientMapper::clientToClientDto)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -40,13 +41,13 @@ public class ClientServiceImpl implements ClientService {
         Client client = clientRepository.findClientByUsernameAndPassword(tokenRequestDto.getUsername(), tokenRequestDto.getPassword());
 
         Claims claims = Jwts.claims();
-        if(client != null) {
-            claims.put("id", client.getId());
-            claims.put("role", client.getRole().getName());
-            claims.put("email", client.getEmail());
-            return new TokenResponseDto(tokenService.generate(claims));
-        }
-        return null;
+
+        claims.put("id", client.getId());
+        claims.put("role", client.getRole().getName());
+        claims.put("email", client.getEmail());
+        claims.put("zabrana", client.getIsZabrana());
+        return new TokenResponseDto(tokenService.generate(claims));
+
     }
 
     @SneakyThrows
@@ -91,5 +92,17 @@ public class ClientServiceImpl implements ClientService {
         client.setPassword(clientUpdatePasswordDto.getPassword());
 
         return clientMapper.clientToClientDto(clientRepository.save(client));
+    }
+
+    @Override
+    public ClientDto setZabrana(zabranaDto zabranaDto) {
+        Client client = clientRepository.findById(zabranaDto.getUserID()).orElseThrow(() ->
+                new NotFoundException("Client with id: " + zabranaDto.getUserID() + " not found.")
+        );
+
+        client.setIsZabrana(zabranaDto.getIsZabrana());
+
+        return clientMapper.clientToClientDto(clientRepository.save(client));
+
     }
 }

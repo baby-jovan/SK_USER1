@@ -44,6 +44,7 @@ public class TestDataRunner implements CommandLineRunner {
         admin.setUsername("admin");
         admin.setPassword("admin");
         admin.setRole(roleAdmin);
+        admin.setIsZabrana(Long.valueOf(1));
         clientRepository.save(admin);
     }
 }

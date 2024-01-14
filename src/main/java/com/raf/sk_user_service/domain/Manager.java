@@ -31,6 +31,8 @@ public class Manager {
     @ManyToOne(optional = false)
     private Role role;
 
+    private Long isZabrana;
+
 //    @JsonManagedReference
 //    @OneToMany(cascade = CascadeType.ALL, mappedBy = "manager", orphanRemoval = true)
 //    private List<Gym> gyms = new ArrayList<>();

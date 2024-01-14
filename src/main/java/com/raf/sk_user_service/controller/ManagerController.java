@@ -8,6 +8,7 @@ import com.raf.sk_user_service.listener.helper.MessageHelper;
 import com.raf.sk_user_service.repository.ManagerRepository;
 import com.raf.sk_user_service.repository.NotificationRepository;
 import com.raf.sk_user_service.repository.NotificationTypeRepository;
+import com.raf.sk_user_service.security.CheckSecurity;
 import com.raf.sk_user_service.security.service.TokenService;
 import com.raf.sk_user_service.service.ManagerService;
 import io.jsonwebtoken.Claims;
@@ -21,7 +22,7 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
-import java.util.Optional;
+import java.util.List;
 
 @RestController
 @RequestMapping("/manager")
@@ -50,10 +51,11 @@ public class ManagerController {
         this.tokenService = tokenService;
     }
 
-
+    @CheckSecurity(roles = {"ROLE_ADMIN"})
     @GetMapping
-    public ResponseEntity<Page<ManagerDto>> findAll(@ApiIgnore Pageable pageable){
-        return new ResponseEntity<>(managerService.findAll(pageable), HttpStatus.OK);
+    public ResponseEntity<List<ManagerDto>> findAll(@RequestHeader("Authorization") String authorization){
+        List<ManagerDto> managerList = managerService.findAll();
+        return new ResponseEntity<>(managerList, HttpStatus.OK);
     }
     @ApiOperation(value = "Login")
     @GetMapping("/login")
@@ -102,6 +104,12 @@ public class ManagerController {
         notification.setEmailTo(email);
         notificationRepository.save(notification);
         return new ResponseEntity<>(managerService.updatePassword(userId, managerUpdatePasswordDto), HttpStatus.OK);
+    }
+
+    @PutMapping("/update-zabrana")
+    @CheckSecurity(roles = "ROLE_ADMIN")
+    public ResponseEntity<ManagerDto> updateZabrana(@RequestHeader("Authorization") String authorization , @RequestBody zabranaDto zabranaDto) {
+        return new ResponseEntity<>(managerService.setZabrana(zabranaDto), HttpStatus.OK);
     }
 
 }

@@ -41,6 +41,9 @@ public class Client {
     @LastModifiedDate
     private Instant updatedDate;
 
+    private Long isZabrana;
+
+
     @PrePersist
     public void prePersist() {
         if (this.numOfCard == null) {

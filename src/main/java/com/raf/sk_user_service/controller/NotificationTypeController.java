@@ -1,6 +1,7 @@
 package com.raf.sk_user_service.controller;
 
 import com.raf.sk_user_service.dto.NotificationTypeDto;
+import com.raf.sk_user_service.security.CheckSecurity;
 import com.raf.sk_user_service.service.NotificationTypeService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +22,8 @@ public class NotificationTypeController {
     }
 
     @GetMapping
-    public ResponseEntity<List<NotificationTypeDto>> findAll() {
+    @CheckSecurity(roles = {"ROLE_ADMIN"})
+    public ResponseEntity<List<NotificationTypeDto>> findAll(@RequestHeader("Authorization") String authorization) {
         List<NotificationTypeDto> notificationTypeList = notificationTypeService.findAll();
         return new ResponseEntity<>(notificationTypeList, HttpStatus.OK);
     }
@@ -33,12 +35,14 @@ public class NotificationTypeController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<NotificationTypeDto> add(@RequestBody NotificationTypeDto notificationTypeDto) {
+    @CheckSecurity(roles = {"ROLE_ADMIN"})
+    public ResponseEntity<NotificationTypeDto> add(@RequestHeader("Authorization") String authorization , @RequestBody NotificationTypeDto notificationTypeDto) {
         return new ResponseEntity<>(notificationTypeService.add(notificationTypeDto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<NotificationTypeDto> update(@PathVariable Long id, @RequestBody NotificationTypeDto notificationTypeDto) {
+    @CheckSecurity(roles = {"ROLE_ADMIN"})
+    public ResponseEntity<NotificationTypeDto> update(@RequestHeader("Authorization") String authorization,@PathVariable Long id, @RequestBody NotificationTypeDto notificationTypeDto) {
         return new ResponseEntity<>(notificationTypeService.update(id, notificationTypeDto), HttpStatus.OK);
     }
 

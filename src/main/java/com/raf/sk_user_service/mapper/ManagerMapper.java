@@ -15,8 +15,10 @@ public class ManagerMapper {
         managerDto.setUsername(manager.getUsername());
         managerDto.setLastName(manager.getLastName());
         managerDto.setDateOfBirth(manager.getDateOfBirth());
+        managerDto.setIsZabrana(manager.getIsZabrana());
         //managerDto.setGyms(manager.getGyms());
         managerDto.setDateOfEmpl(manager.getDateOfEmpl());
+        managerDto.setRole(manager.getRole());
         return managerDto;
     }
 

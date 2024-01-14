@@ -1,6 +1,5 @@
 package com.raf.sk_user_service.service.impl;
 
-import com.raf.sk_user_service.domain.Client;
 import com.raf.sk_user_service.domain.Manager;
 import com.raf.sk_user_service.dto.*;
 import com.raf.sk_user_service.exception.NotFoundException;
@@ -15,7 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -31,18 +31,21 @@ public class ManagerServiceImpl implements ManagerService {
     }
 
     @Override
-    public Page<ManagerDto> findAll(Pageable pageable) {
-        return managerRepository.findAll(pageable).map(managerMapper::managerToManagerDto);
+    public List<ManagerDto> findAll() {
+        return managerRepository.findAll().stream()
+                .map(managerMapper::managerToManagerDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public TokenResponseDto logIn(TokenRequestDto tokenRequestDto) {
+    public TokenResponseDto logIn(TokenRequestDto tokenRequestDto) throws NullPointerException{
         Manager manager = managerRepository.findManagerByUsernameAndPassword(tokenRequestDto.getUsername(), tokenRequestDto.getPassword());
 
         Claims claims = Jwts.claims();
         claims.put("id", manager.getId());
         claims.put("role", manager.getRole().getName());
         claims.put("email", manager.getEmail());
+        claims.put("zabrana", manager.getIsZabrana());
 
         return new TokenResponseDto(tokenService.generate(claims));
     }
@@ -90,5 +93,17 @@ public class ManagerServiceImpl implements ManagerService {
 
         manager.setPassword(managerUpdatePasswordDto.getPassword());
         return managerMapper.managerToManagerDto(managerRepository.save(manager));
+    }
+
+    @Override
+    public ManagerDto setZabrana(zabranaDto zabranaDto) {
+        Manager manager = managerRepository.findById(zabranaDto.getUserID()).orElseThrow(() ->
+                new NotFoundException("Manager with id: " + zabranaDto.getUserID() + " not found.")
+        );
+
+        manager.setIsZabrana(zabranaDto.getIsZabrana());
+
+        return managerMapper.managerToManagerDto(managerRepository.save(manager));
+
     }
 }
