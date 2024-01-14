@@ -1,7 +1,13 @@
 package com.raf.sk_user_service.controller;
 
+import com.raf.sk_user_service.domain.Client;
+import com.raf.sk_user_service.domain.Notification;
+import com.raf.sk_user_service.domain.NotificationType;
 import com.raf.sk_user_service.dto.*;
 import com.raf.sk_user_service.listener.helper.MessageHelper;
+import com.raf.sk_user_service.repository.ClientRepository;
+import com.raf.sk_user_service.repository.NotificationRepository;
+import com.raf.sk_user_service.repository.NotificationTypeRepository;
 import com.raf.sk_user_service.security.service.TokenService;
 import com.raf.sk_user_service.service.ClientService;
 import io.jsonwebtoken.Claims;
@@ -24,6 +30,9 @@ import springfox.documentation.annotations.ApiIgnore;
 @Api(tags = "Client Controller")
 public class ClientController {
     private ClientService clientService;
+    private ClientRepository clientRepository;
+    private NotificationTypeRepository notificationTypeRepository;
+    private NotificationRepository notificationRepository;
     private TokenService tokenService;
     private JmsTemplate jmsTemplate;
     private MessageHelper messageHelper;
@@ -36,12 +45,15 @@ public class ClientController {
 
 
     public ClientController(ClientService clientService, TokenService tokenService, JmsTemplate jmsTemplate,
-                            MessageHelper messageHelper, @Value("${destination.notify}") String orderDestination){
+                            MessageHelper messageHelper, ClientRepository clientRepository, NotificationRepository notificationRepository, NotificationTypeRepository notificationTypeRepository, @Value("${destination.notify}") String orderDestination){
         this.clientService = clientService;
         this.tokenService = tokenService;
         this.jmsTemplate = jmsTemplate;
         this.messageHelper = messageHelper;
         this.orderDestination = orderDestination;
+        this.notificationTypeRepository = notificationTypeRepository;
+        this.notificationRepository = notificationRepository;
+        this.clientRepository = clientRepository;
     }
 
     @ApiOperation(value = "Get all clients")
@@ -69,9 +81,17 @@ public class ClientController {
 
     @PostMapping("/register")
     public ResponseEntity<ClientDto> add(@RequestBody ClientCreateDto clientCreateDto){
+        NotificationType notificationType = notificationTypeRepository.findNotificationTypeByNotificationType("REGISTER_TYPE");
         jmsTemplate.convertAndSend(orderDestination,
-                messageHelper.createTextMessage(new NotifyDto("Uspesno ste se registrovali", "Potvrda registracije", clientCreateDto.getEmail())));
-        return new ResponseEntity<>(clientService.add(clientCreateDto), HttpStatus.CREATED);
+                messageHelper.createTextMessage(new NotificationDto(clientCreateDto.getEmail(), notificationType)));
+        Notification notification = new Notification();
+        ResponseEntity<ClientDto> responseEntity = new ResponseEntity<>(clientService.add(clientCreateDto), HttpStatus.CREATED);
+        Client tmp = clientRepository.findClientByUsernameAndPassword(clientCreateDto.getUsername(), clientCreateDto.getPassword());
+        notification.setUserId(tmp.getId());
+        notification.setNotificationType(notificationType);
+        notification.setEmailTo(clientCreateDto.getEmail());
+        notificationRepository.save(notification);
+        return responseEntity;
     }
 
     @PutMapping("/{id}")
@@ -90,8 +110,20 @@ public class ClientController {
     @PutMapping("/change_password")
     public ResponseEntity<ClientDto> updatePassword(@RequestHeader(name = "Authorization") String token, @RequestBody ClientUpdatePasswordDto clientUpdatePasswordDto) {
         Claims claims = tokenService.parseToken(token.split(" ")[1]);
-        Long userId = Long.parseLong(claims.get("id").toString());
-        return new ResponseEntity<>(clientService.updatePassword(userId, clientUpdatePasswordDto), HttpStatus.OK);
+        if (claims != null) {
+            Long userId = Long.parseLong(claims.get("id").toString());
+            String email = claims.get("email").toString();
+            Notification notification = new Notification();
+            NotificationType notificationType = notificationTypeRepository.findNotificationTypeByNotificationType("PASSWORD_TYPE");
+            jmsTemplate.convertAndSend(orderDestination,
+                    messageHelper.createTextMessage(new NotificationDto(email, notificationType)));
+            notification.setUserId(userId);
+            notification.setNotificationType(notificationType);
+            notification.setEmailTo(email);
+            notificationRepository.save(notification);
+            return new ResponseEntity<>(clientService.updatePassword(userId, clientUpdatePasswordDto), HttpStatus.OK);
+        }
+        return null;
     }
 
 

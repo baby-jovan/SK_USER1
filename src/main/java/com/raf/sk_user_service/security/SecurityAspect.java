@@ -10,12 +10,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
 @Aspect
 @Configuration
+@Component
 public class SecurityAspect {
 
 
@@ -57,6 +59,7 @@ public class SecurityAspect {
         //Check user role and proceed if user has appropriate role for specified route
         CheckSecurity checkSecurity = method.getAnnotation(CheckSecurity.class);
         String role = claims.get("role", String.class);
+        System.out.println(role);
         if (Arrays.asList(checkSecurity.roles()).contains(role)) {
             return joinPoint.proceed();
         }

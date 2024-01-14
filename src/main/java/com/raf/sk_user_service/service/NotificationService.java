@@ -7,8 +7,11 @@ import com.raf.sk_user_service.dto.NotificationDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface NotificationService {
-    Page<NotificationDto> findAll(Pageable pageable);
+    List<NotificationDto> findAll();
+    List<NotificationDto> findFor(Long id);
     NotificationDto add(NotificationCreateDto notificationCreateDto);
     ClientDto update(Long id, ClientUpdatedDto clientUpdatedDto);
     void deleteById(Long id);

@@ -42,6 +42,10 @@ public class NotificationTypeServiceImpl implements NotificationTypeService {
     public NotificationTypeDto add(NotificationTypeDto notificationTypeDto) {
         NotificationType notificationType = new NotificationType();
         notificationType.setNotificationType(notificationTypeDto.getNotificationType());
+        notificationType.setBody(notificationTypeDto.getBody());
+        notificationType.setSubject(notificationTypeDto.getSubject());
+
+
         notificationTypeRepository.save(notificationType);
         return notificationTypeDto;
     }

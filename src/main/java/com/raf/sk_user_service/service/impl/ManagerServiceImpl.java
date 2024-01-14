@@ -2,13 +2,14 @@ package com.raf.sk_user_service.service.impl;
 
 import com.raf.sk_user_service.domain.Client;
 import com.raf.sk_user_service.domain.Manager;
-import com.raf.sk_user_service.dto.ManagerCreateDto;
-import com.raf.sk_user_service.dto.ManagerDto;
-import com.raf.sk_user_service.dto.ManagerUpdatedDto;
+import com.raf.sk_user_service.dto.*;
 import com.raf.sk_user_service.exception.NotFoundException;
 import com.raf.sk_user_service.mapper.ManagerMapper;
 import com.raf.sk_user_service.repository.ManagerRepository;
+import com.raf.sk_user_service.security.service.TokenService;
 import com.raf.sk_user_service.service.ManagerService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,10 +22,12 @@ import java.util.Optional;
 public class ManagerServiceImpl implements ManagerService {
     private ManagerRepository managerRepository;
     private ManagerMapper managerMapper;
+    private TokenService tokenService;
 
-    public ManagerServiceImpl(ManagerRepository managerRepository, ManagerMapper managerMapper) {
+    public ManagerServiceImpl(ManagerRepository managerRepository, TokenService tokenService, ManagerMapper managerMapper) {
         this.managerRepository = managerRepository;
         this.managerMapper = managerMapper;
+        this.tokenService = tokenService;
     }
 
     @Override
@@ -33,8 +36,15 @@ public class ManagerServiceImpl implements ManagerService {
     }
 
     @Override
-    public Optional<Manager> logIn(String username, String password) {
-        return managerRepository.findManagerByUsernameAndPassword(username, password);
+    public TokenResponseDto logIn(TokenRequestDto tokenRequestDto) {
+        Manager manager = managerRepository.findManagerByUsernameAndPassword(tokenRequestDto.getUsername(), tokenRequestDto.getPassword());
+
+        Claims claims = Jwts.claims();
+        claims.put("id", manager.getId());
+        claims.put("role", manager.getRole().getName());
+        claims.put("email", manager.getEmail());
+
+        return new TokenResponseDto(tokenService.generate(claims));
     }
 
     @Override
@@ -70,5 +80,15 @@ public class ManagerServiceImpl implements ManagerService {
     @Override
     public void deleteById(Long id) {
         managerRepository.deleteById(id);
+    }
+
+    @Override
+    public ManagerDto updatePassword(Long id, ManagerUpdatePasswordDto managerUpdatePasswordDto) {
+        Manager manager = managerRepository.findById(id).orElseThrow(() ->
+                new NotFoundException("Manager with id: " + id + " not found.")
+        );
+
+        manager.setPassword(managerUpdatePasswordDto.getPassword());
+        return managerMapper.managerToManagerDto(managerRepository.save(manager));
     }
 }

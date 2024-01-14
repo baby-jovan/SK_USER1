@@ -9,10 +9,12 @@ import java.util.Optional;
 
 public interface ManagerService {
     Page<ManagerDto> findAll(Pageable pageable);
-    Optional<Manager> logIn(String username, String password);
+    TokenResponseDto logIn(TokenRequestDto tokenRequestDto);
     ManagerDto findById(Long id);
     ManagerDto add(ManagerCreateDto managerCreateDto);
 
     ManagerDto update(Long id, ManagerUpdatedDto managerUpdatedDto);
     void deleteById(Long id);
+
+    ManagerDto updatePassword(Long id, ManagerUpdatePasswordDto managerUpdatePasswordDto);
 }

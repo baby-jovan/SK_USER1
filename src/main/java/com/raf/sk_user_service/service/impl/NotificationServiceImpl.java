@@ -13,6 +13,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 @Service
 @Transactional
@@ -26,8 +29,17 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public Page<NotificationDto> findAll(Pageable pageable) {
-        return notificationRepository.findAll(pageable).map(notificationMapper::notificationToNotificationDto);
+    public List<NotificationDto> findAll() {
+        return notificationRepository.findAll().stream()
+                .map(notificationMapper::notificationToNotificationDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<NotificationDto> findFor(Long id) {
+        return notificationRepository.findAllByUserId(id).stream()
+                .map(notificationMapper::notificationToNotificationDto)
+                .collect(Collectors.toList());
     }
 
     @Override
